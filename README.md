@@ -1,307 +1,189 @@
-# Snow Pole Detection - TDT17 Mini-Project
+# Snow Pole Detection using YOLOv8
 
-## 📋 Project Overview
+TDT17 -- Visual Intelligence Mini Project
 
-Real-time object detection of snow poles for autonomous driving in winter conditions. This project uses YOLOv8 to detect snow poles from images captured in the Trøndelag region.
+## Project Overview
 
-**Course**: TDT17 - Visual Intelligence  
-**Topic**: Autonomous Driving (AD)  
-**Task**: Snow pole detection with bounding boxes  
-**Dataset**: Poles2025 (YOLO format)
+This project focuses on detecting **snow poles in winter road scenes**
+using deep learning. Snow poles are commonly used in Norway to mark the
+road edges during snowy conditions, and detecting them can help improve
+**autonomous driving systems in winter environments**.
 
----
+The task is formulated as an **object detection problem**, where the
+model predicts **bounding boxes around snow poles** in images.
 
-## 🚀 Quick Start Guide for University Computers
+The dataset used is **Poles2025**, captured in the Trøndelag region.
 
-### Step 1: Setup Environment
+------------------------------------------------------------------------
 
-```bash
-# Navigate to your working directory
-cd ~
+## Dataset
 
-# Clone/copy this project
-# (If files are already there, skip to next step)
+Dataset: **Poles2025**
 
-# Navigate to project directory
-cd snow_pole_detection
+Dataset locations:
 
-# Create virtual environment
+IDUN cluster
+
+    /cluster/projects/vc/courses/TDT17/ad/Poles2025
+
+Cybele lab
+
+    datasets/TDT17/ad/Poles2025
+
+Dataset characteristics:
+
+-   Single object class: **snow pole**
+-   Labels in **YOLO format**
+-   Test set labels are hidden for the leaderboard
+
+------------------------------------------------------------------------
+
+## Project Workflow
+
+The project is divided into four main stages:
+
+1.  Exploratory Data Analysis (EDA)\
+2.  Model Training\
+3.  Model Evaluation\
+4.  Testing on new images
+
+------------------------------------------------------------------------
+
+## Project Structure
+
+    project/
+    │
+    ├── EDA.ipynb
+    ├── Training.ipynb
+    ├── Evaluation.ipynb
+    │
+    ├── Testing_MSJ.ipynb
+    ├── Testing_roadpoles_v1.ipynb
+    ├── Testing_Road_poles_iPhone.ipynb
+    │
+    ├── LICENSE
+    └── README.md
+
+------------------------------------------------------------------------
+
+## Environment Setup
+
+Create a virtual environment:
+
+``` bash
 python3 -m venv venv
 source venv/bin/activate
-
-# Install dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
 ```
 
-### Step 2: Data Analysis (5-10 minutes)
+Install dependencies:
 
-```bash
-# On IDUN cluster:
-python data_analysis.py --data_path /cluster/projects/vc/courses/TDT17/ad/Poles2025
-
-# On Cybele lab:
-python data_analysis.py --data_path datasets/TDT17/ad/Poles2025
+``` bash
+pip install ultralytics
+pip install torch
+pip install torchvision
+pip install matplotlib
+pip install opencv-python
+pip install pandas
+pip install seaborn
 ```
 
-**Output**: 
-- `analysis_results/data_analysis.png` - Statistical visualizations
-- `analysis_results/sample_annotations.png` - Sample images with labels
-- `analysis_results/analysis_report.json` - Detailed statistics
+------------------------------------------------------------------------
 
-### Step 3: Train Model (1-3 hours)
+## Exploratory Data Analysis
 
-```bash
-# YOLOv8 Nano (fastest, recommended for quick results)
-# On IDUN:
-python train.py --data_path /cluster/projects/vc/courses/TDT17/ad/Poles2025 \
-                --model_size n \
-                --epochs 100 \
-                --batch_size 16 \
-                --device cuda
+Notebook:
 
-# On Cybele:
-python train.py --data_path datasets/TDT17/ad/Poles2025 \
-                --model_size n \
-                --epochs 100 \
-                --batch_size 16 \
-                --device cuda
-```
+    EDA.ipynb
 
-**For 2-person groups** (train a second model):
-```bash
-# YOLOv8 Small (better accuracy, longer training)
-python train.py --data_path <DATA_PATH> \
-                --model_size s \
-                --epochs 100 \
-                --batch_size 16 \
-                --device cuda
-```
+Purpose of the analysis:
 
-**Output**:
-- `runs/yolov8n_YYYYMMDD_HHMMSS/weights/best.pt` - Best model
-- `runs/yolov8n_YYYYMMDD_HHMMSS/weights/last.pt` - Last epoch
-- Training curves, sustainability metrics, and logs
+-   Inspect dataset structure
+-   Visualize annotations
+-   Check bounding box distributions
+-   Understand dataset characteristics
 
-### Step 4: Evaluate Model (10-15 minutes)
+------------------------------------------------------------------------
 
-```bash
-# Replace <MODEL_PATH> with your trained model path
-# Example: runs/yolov8n_20241119_140523/weights/best.pt
+## Model Training
 
-# On IDUN:
-python evaluate.py --model_path <MODEL_PATH> \
-                   --data_path /cluster/projects/vc/courses/TDT17/ad/Poles2025 \
-                   --conf_threshold 0.25
+Notebook:
 
-# On Cybele:
-python evaluate.py --model_path <MODEL_PATH> \
-                   --data_path datasets/TDT17/ad/Poles2025 \
-                   --conf_threshold 0.25
-```
+    Training.ipynb
 
-**Output**:
-- Validation metrics (Precision, Recall, mAP@50, mAP@0.5:0.95)
-- Test predictions (for leaderboard)
-- Prediction visualizations
-- Confidence distribution analysis
+Model used:
 
----
+**YOLOv8**
 
-## 📊 Expected Results
+Example configuration:
 
-### YOLOv8 Nano (n)
-- **Training time**: ~1-2 hours on RTX 4090
-- **Expected mAP@50**: 0.75-0.85
-- **Expected mAP@0.5:0.95**: 0.50-0.65
-- **Model size**: ~6 MB
-- **Inference speed**: ~2-3 ms/image
+    Model: YOLOv8n
+    Epochs: 100
+    Batch size: 16
+    Image size: 640
 
-### YOLOv8 Small (s)
-- **Training time**: ~2-3 hours on RTX 4090
-- **Expected mAP@50**: 0.80-0.90
-- **Expected mAP@0.5:0.95**: 0.55-0.70
-- **Model size**: ~22 MB
-- **Inference speed**: ~4-5 ms/image
+Training outputs are saved in:
 
----
+    runs/detect/train/
 
-## 🗂️ Project Structure
+Important files:
 
-```
-snow_pole_detection/
-├── data_analysis.py          # Exploratory data analysis
-├── train.py                  # Model training
-├── evaluate.py               # Model evaluation
-├── requirements.txt          # Dependencies
-├── README.md                 # This file
-│
-├── analysis_results/         # EDA outputs
-│   ├── data_analysis.png
-│   ├── sample_annotations.png
-│   └── analysis_report.json
-│
-└── runs/                     # Training outputs
-    └── yolov8n_YYYYMMDD_HHMMSS/
-        ├── weights/
-        │   ├── best.pt       # Best model
-        │   └── last.pt       # Last epoch
-        ├── results.csv       # Training metrics
-        ├── training_info.json
-        ├── sustainability_metrics.json
-        └── evaluation/       # Evaluation outputs
-            ├── validation_metrics.json
-            ├── prediction_samples.png
-            └── test_predictions/
-```
+    best.pt
+    last.pt
+    results.png
 
----
+------------------------------------------------------------------------
 
-## 📈 Performance Metrics
+## Model Evaluation
 
-The project calculates the following metrics as required:
+Notebook:
 
-1. **Precision**: Proportion of true positives among all positive predictions
-2. **Recall**: Proportion of true positives among all actual positives  
-3. **mAP@50**: Mean Average Precision at IoU threshold 0.5
-4. **mAP@0.5:0.95**: Mean Average Precision averaged over IoU thresholds 0.5 to 0.95
+    Evaluation.ipynb
 
----
+Metrics used:
 
-## 🌱 Sustainability Analysis
+-   Precision
+-   Recall
+-   mAP@50
+-   mAP@0.5:0.95
 
-The training script automatically calculates:
-- Total training time
-- Estimated energy consumption (kWh)
-- Equivalent distance in Tesla Model Y
-- Percentage of Trondheim-Oslo trip (490 km)
+------------------------------------------------------------------------
 
-Example output:
-```
-Training Time: 1.5 hours
-Estimated Energy Used: 0.540 kWh
-Tesla Model Y Comparison:
-  Distance possible: 38.0 km
-  Percentage of trip to Oslo: 7.8%
-```
+## Testing
 
----
+Testing notebooks:
 
-## 🔧 Troubleshooting
+    Testing_MSJ.ipynb
+    Testing_roadpoles_v1.ipynb
+    Testing_Road_poles_iPhone.ipynb
 
-### CUDA Out of Memory
-```bash
-# Reduce batch size
-python train.py --data_path <DATA_PATH> --batch_size 8
-```
+These notebooks load the trained model and run inference on new images
+or videos.
 
-### Slow Training on CPU
-```bash
-# Reduce epochs for testing
-python train.py --data_path <DATA_PATH> --epochs 50 --device cpu
-```
+------------------------------------------------------------------------
 
-### IDUN Queue Times
-- Submit job during off-peak hours (evenings/weekends)
-- Use Cybele lab as alternative
-- Start training early to account for delays
+## Sustainability
 
----
+Training deep learning models consumes computational resources and
+energy.\
+In this project we estimate:
 
-## 📝 Presentation Structure
+-   Training time
+-   Energy consumption
+-   Equivalent driving distance using a Tesla Model Y
 
-Your video presentation (12 min solo / 14 min group) should cover:
+------------------------------------------------------------------------
 
-1. **Background / Motivation** (2 min)
-   - Winter driving challenges
-   - Role of snow poles in autonomous driving
-   - Project objectives
+## References
 
-2. **Data Analysis** (2 min)
-   - Dataset statistics
-   - Key findings from EDA
-   - Challenges identified
+YOLOv8 -- Ultralytics\
+https://github.com/ultralytics/ultralytics
 
-3. **Approach / Strategy** (1 min)
-   - Why YOLO was chosen
-   - Model selection rationale
-   - Training strategy
+PyTorch\
+https://pytorch.org/
 
-4. **Methods / Models** (2 min)
-   - YOLOv8 architecture overview
-   - Model configuration
-   - Training parameters
+------------------------------------------------------------------------
 
-5. **Results** (3 min)
-   - Training curves
-   - Validation metrics
-   - Visual examples
-   - Comparison (if 2 models)
+## Author
 
-6. **Discussion** (1 min)
-   - What worked well
-   - Limitations
-   - Potential improvements
-
-7. **Sustainability** (1 min)
-   - Energy consumption
-   - Tesla Model Y equivalence
-
-8. **Key Learning Points** (1 min)
-   - Technical insights
-   - Challenges overcome
-
----
-
-## 📚 References
-
-- **YOLOv8**: Ultralytics YOLO - https://github.com/ultralytics/ultralytics
-- **PyTorch**: https://pytorch.org/
-- **Autonomous Driving in Winter**: Relevant papers on snow/winter detection
-
----
-
-## 👥 Group Work (if applicable)
-
-If working in a group of 2, clearly document:
-- Who implemented which parts
-- Division of analysis tasks
-- Collaboration on presentation
-
----
-
-## ✅ Checklist Before Submission
-
-- [ ] Data analysis completed and visualizations saved
-- [ ] Model(s) trained successfully
-- [ ] Evaluation metrics calculated
-- [ ] Test predictions generated
-- [ ] Sustainability metrics documented
-- [ ] Video presentation recorded (12/14 min)
-- [ ] Code uploaded to GitHub or kept locally
-- [ ] All outputs saved and organized
-
----
-
-## 📧 Contact
-
-For questions about the project:
-- Course instructor: Frank Lindseth (frankl@ntnu.no)
-- Check course materials on Blackboard
-- Use course discussion forum
-
----
-
-## 🎯 Tips for Success
-
-1. **Start early** - Training takes time, especially with queue delays
-2. **Test on small subset first** - Verify code works before full training
-3. **Save intermediate results** - Don't lose work due to crashes
-4. **Document everything** - Take notes for your presentation
-5. **Use visualization** - Good plots make better presentations
-6. **Compare results** - Try different confidence thresholds
-7. **Backup your work** - Save to multiple locations
-
----
-
-**Good luck with your project! 🎉**
+TDT17 -- Visual Intelligence Mini Project\
+NTNU
