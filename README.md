@@ -2,6 +2,8 @@
 
 TDT17 -- Visual Intelligence Mini Project
 
+![sample](https://github.com/user-attachments/assets/7c1068e6-9964-4c9b-b1c4-31c84a8e622b)
+
 ------------------------------------------------------------------------
 
 # 1. Background & Motivation
@@ -82,6 +84,8 @@ scenarios.
 ------------------------------------------------------------------------
 
 # 3. Data Analysis (EDA)
+
+![eda](https://github.com/user-attachments/assets/2876024f-7d20-44d8-8f96-2e429034c397)
 
 ## Provided Dataset (iPhone)
 
@@ -226,41 +230,34 @@ https://developer.nvidia.com/blog/maximizing-deep-learning-performance-on-nvidia
 
 ## Latency Benchmarks (RTX 4090)
 
-  Model     Latency
-  --------- ---------
-  YOLOv9t   18.0 ms
-  YOLO11s   18.5 ms
-  RF-DETR   36.4 ms
+| Model   | Latency |
+|---------|---------|
+| YOLOv9t | 18.0 ms |
+| YOLO11s | 18.5 ms |
+| RF-DETR | 36.4 ms |
 
 Parallel inference means system latency is determined by the **slowest
 model**, not the sum.
 
 ------------------------------------------------------------------------
 
-# 5. Results
+# 6. Results
 
-  -----------------------------------------------------------------------
-  Model             mAP@50            mAP@50:95         Notes
-  ----------------- ----------------- ----------------- -----------------
-  Baseline          92.0%             65.0%             Fast but loose
-  (YOLOv11n)                                            boxes
+![result](https://github.com/user-attachments/assets/11d30dc7-55a5-48bc-b764-227884ced2f1)
 
-  RF-DETR (Stage 1) 89.8%             66.6%             Robust but missed
-                                                        domain specifics
-
-  RF-DETR (Stage 2) 95.0%             74.5%             Fine-tuned on
-                                                        iPhone data
-
-  Final Ensemble    **97.6%**         **79.5%**         Rank #1 / #2
-  (WBF)                                                 
-  -----------------------------------------------------------------------
+| Model | mAP@50 | mAP@50:95 | Notes |
+|------|--------|-----------|------|
+| Baseline (YOLOv11n) | 92.0% | 65.0% | Fast but loose boxes |
+| RF-DETR (Stage 1) | 89.8% | 66.6% | Robust but missed domain specifics |
+| RF-DETR (Stage 2) | 95.0% | 74.5% | Fine-tuned on iPhone data |
+| Final Ensemble (WBF) | **97.6%** | **79.5%** | Rank #1 / #2 |
 
 Key finding: **mAP@50 was easy (\~97%) but mAP@50‑95 required tighter
 bounding boxes.**
 
 ------------------------------------------------------------------------
 
-# 6. Discussion
+# 7. Discussion
 
 ### Resolution Matters
 
@@ -283,7 +280,7 @@ Combining them solved both weaknesses.
 
 ------------------------------------------------------------------------
 
-# 7. Sustainability & Compute
+# 8. Sustainability & Compute
 
 Training was performed on:
 
@@ -296,11 +293,11 @@ Training was performed on:
 
 Breakdown:
 
-  Task               Time
-  ------------------ ------------
-  SAM3 Pipeline      \~5 hours
-  RF-DETR Training   \~12 hours
-  YOLO Experiments   \~8 hours
+| Task | Time |
+|------|------|
+| SAM3 Pipeline | ~5 hours |
+| RF-DETR Training | ~12 hours |
+| YOLO Experiments | ~8 hours |
 
 ### Energy Consumption
 
@@ -322,7 +319,7 @@ Project energy (8.75 kWh) ≈ **54 km driving distance**.
 
 ------------------------------------------------------------------------
 
-# 8. Key Learning Points
+# 9. Key Learning Points
 
 1.  **Data Engineering \> Model Tuning**\
     Building the SAM3 pipeline yielded larger gains than hyperparameter
