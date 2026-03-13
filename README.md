@@ -1,259 +1,344 @@
-# Snow Pole Detection using YOLOv9t and YOLO11n
-TDT17 – Visual Intelligence Mini Project
+# Snow Pole Detection using YOLOv9t and YOLO11s
 
-## Project Overview
-This project focuses on detecting **snow poles in winter road scenes** using deep learning. Snow poles are commonly used in Norway to mark road boundaries during snowy conditions, and detecting them can help improve **autonomous driving systems in winter environments**.
+TDT17 -- Visual Intelligence Mini Project
 
-The task is formulated as an **object detection problem**, where the model predicts **bounding boxes around snow poles** in road images.
+------------------------------------------------------------------------
 
-The dataset used is **Poles2025**, captured in the Trøndelag region.
+# 1. Background & Motivation
 
----
+### The Problem
 
-## Dataset
+Autonomous driving (AD) systems rely heavily on **lane markings**.\
+In Nordic winters, roads are often **covered in snow**, making standard
+lane detection unreliable.
 
-**Dataset:** Poles2025
+### The Solution
 
-**Dataset locations**
+**Snow poles** act as the *ground truth* for road boundaries in winter.\
+Accurate detection of these poles is therefore critical for **safe
+autonomous driving**.
 
-IDUN cluster:
-```text
-/cluster/projects/vc/courses/TDT17/ad/Poles2025
-```
+### Challenges
 
-Cybele lab:
-```text
-datasets/TDT17/ad/Poles2025
-```
+**Thin Objects** - Snow poles are extremely thin. - At distance they can
+appear only **1--2 pixels wide**.
 
-**Dataset characteristics**
-- Single object class: **snow pole**
-- Labels in **YOLO format**
-- Test set labels are hidden for the leaderboard
-- Additional road pole data is used for qualitative testing
+**Real-time Constraint** - Detection must run on **edge hardware** with
+**low latency**.
 
----
+### Goal
 
-## Implemented Models
+Develop a robust **object detection pipeline** that maximizes **mAP
+(Mean Average Precision)** while maintaining **real-time performance**.
 
-In this project, I worked with the following lightweight detection models:
+------------------------------------------------------------------------
 
-- **YOLOv9t**
-- **YOLO11n**
+# 2. Approach & Strategy
 
-These models were selected because they are suitable for **real-time object detection** and **edge deployment**, which is important for autonomous driving applications.
+We adopted a **Data-Centric AI approach** rather than only tuning model
+hyperparameters.
 
-The project compares compact YOLO variants in terms of detection quality and practical usability.
+## 1. Data Engine
 
----
+The provided dataset (\~1k images) was insufficient for robust
+generalization.
 
-## Project Workflow
+We therefore collected additional data by:
 
-The project is divided into four main stages:
+-   Scraping **10+ hours of YouTube winter driving footage**
+-   Extracting frames to create a large pseudo-dataset.
 
-1. **Exploratory Data Analysis (EDA)**
-2. **Model Training**
-3. **Model Evaluation**
-4. **Testing on external and qualitative datasets**
+## 2. Auto-Labeling Pipeline
 
----
+We used **SAM 3 (Segment Anything Model)** to automatically generate
+labels.
 
-## Project Structure
+This produced approximately:
 
-```text
-project/
-│
-├── EDA.ipynb
-├── Training.ipynb
-├── Evaluation.ipynb
-│
-├── Testing_MSJ.ipynb
-├── Testing_roadpoles_v1.ipynb
-├── Testing_Road_poles_iPhone.ipynb
-│
-├── LICENSE
-└── README.md
-```
+**\~36,000 pseudo-labeled frames**
 
----
+## 3. Transfer Learning Hierarchy
 
-## Environment Setup
+**Stage 1 -- Pre-training**
 
-Create a virtual environment:
+Train on large **noisy YouTube dataset**\
+→ provides **general visual knowledge**.
 
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
+**Stage 2 -- Fine-tuning**
 
-Install dependencies:
+Train on high-quality **iPhone / Roadpoles dataset**\
+→ provides **domain specificity**.
 
-```bash
-pip install ultralytics
-pip install torch
-pip install torchvision
-pip install matplotlib
-pip install opencv-python
-pip install pandas
-pip install seaborn
-pip install pyyaml
-```
+## 4. Ensemble Architecture
 
----
+To increase robustness we combined:
 
-## 1. Exploratory Data Analysis
+-   **CNN detectors (YOLO)**
+-   **Transformer detectors (RF-DETR)**
 
-**Notebook:** `EDA.ipynb`
+This architectural diversity improves performance across different
+scenarios.
 
-The EDA stage was used to better understand the dataset before training.
+------------------------------------------------------------------------
 
-### Goals
-- Inspect dataset structure
-- Visualize annotations
-- Analyze bounding box distributions
-- Identify dataset challenges relevant to training
+# 3. Data Analysis (EDA)
 
-### Typical outputs
-- Sample images with bounding boxes
-- Dataset statistics
-- Distribution plots
-- Observations about annotation density and image variation
+## Provided Dataset (iPhone)
 
-EDA was important because the project expectations require that **model development is guided by exploratory data analysis**.
+**Size** \~1,000 labeled images
 
----
+**Quality** High resolution: 1920 × 1080
 
-## 2. Model Training
+**Issue** Dataset splits were **sequential**, causing **data leakage**
+where train and test images looked very similar.
 
-**Notebook:** `Training.ipynb`
+## Scraped Dataset (YouTube)
 
-The training notebook prepares the dataset and trains compact YOLO detectors for snow pole detection.
+**Size** \~15,000 processed frames
 
-### Models used
-- **YOLOv9t**
-- **YOLO11n**
+**Environmental Variety**
 
-### Why these models?
-- Designed for fast inference
-- Small enough for edge-oriented deployment
-- Strong baselines for one-class object detection
+-   Sunny
+-   Overcast
+-   Heavy snow
+-   Highway vs rural roads
 
-### Example training settings
-```text
-Image size: 1280
-Epochs: 100
-Batch size: 16
-Device: CUDA
-```
+**Labeling** Auto-labeled using **SAM 3** with prompt:
 
-### Training outputs
-Training runs are saved under:
+`snowpole`
 
-```text
-runs/snowpole_detection/
-```
+**Filtering**
 
-Each experiment produces files such as:
+Low-confidence detections were removed to avoid **training on incorrect
+labels**.
 
-```text
-weights/best.pt
-weights/last.pt
-results.csv
-results.png
-training_metadata.json
-```
+------------------------------------------------------------------------
 
----
+# 4. Methods & Models
 
-## 3. Model Evaluation
+## Architecture 1: YOLOv9t & YOLO11s
 
-**Notebook:** `Evaluation.ipynb`
+### Why YOLOv9t?
 
-The models are evaluated using the required object detection metrics:
+YOLOv9 introduces **PGI (Programmable Gradient Information)**.
 
-- **Precision**
-- **Recall**
-- **mAP@50**
-- **mAP@0.5:0.95**
+This mechanism helps preserve **fine-grained visual details**, which is
+crucial for detecting **thin snow poles**.
 
-### Metric explanation
-- **Precision**: how many predicted poles are correct
-- **Recall**: how many real poles are successfully detected
-- **mAP@50**: detection quality at IoU threshold 0.5
-- **mAP@0.5:0.95**: average performance across multiple IoU thresholds
+Our experiments showed that YOLOv9 preserved faint pole structures
+better than nano-scale models like YOLO11n.
 
-These metrics provide a balanced view of the model performance.
+### Training Configuration
 
----
+Native resolution training:
 
-## 4. Testing
+-   imgsz = 1280
+-   imgsz = 1920
 
-The project also includes qualitative testing notebooks:
+Higher resolution was required because poles become **invisible at low
+resolution**.
 
-- `Testing_MSJ.ipynb`
-- `Testing_roadpoles_v1.ipynb`
-- `Testing_Road_poles_iPhone.ipynb`
+## Architecture 2: RF-DETR (Transformer)
 
-These notebooks:
-- Load trained model weights
-- Run inference on new or external data
-- Visualize predicted bounding boxes
-- Support qualitative comparison between trained models
+### Why RF-DETR?
 
-This helps evaluate how well the models generalize beyond the main validation split.
+CNN detectors focus mainly on **local features**.
 
----
+Transformers instead use **global attention**, allowing the model to
+reason about **scene context**.
 
-## Sustainability
+### Benefit
 
-Training deep learning models requires computational resources and energy.
+RF-DETR can understand that:
 
-For this project, sustainability is considered by estimating:
-- Total training time
-- Approximate energy usage
-- Equivalent driving distance using the same energy in a **Tesla Model Y**
+> A vertical white line inside a tree is **not** a snow pole.
 
-This provides a practical interpretation of the environmental cost of model development.
+YOLO detectors sometimes **hallucinate poles in forest backgrounds**,
+while transformers reduce such errors.
 
----
+------------------------------------------------------------------------
 
-## Discussion
+# SAM 3 Auto-Labeling Pipeline
 
-This project demonstrates how lightweight object detectors can be applied to a real-world autonomous driving problem in winter conditions.
+We implemented a custom Python pipeline (`pipeline.py`) to scale data
+generation.
 
-Using **YOLOv9t** and **YOLO11n** makes it possible to balance:
-- detection performance,
-- inference speed,
-- and model size.
+### Pipeline Steps
 
-Because snow pole detection is intended for real-time use on limited hardware, compact models are a suitable design choice.
+1.  Input -- YouTube URL\
+2.  Extract -- `ffmpeg` extracts frames at 1 FPS (high quality)\
+3.  Rotate -- handle orientation differences\
+4.  Label -- SAM3 inference with prompt `"snowpole"`\
+5.  Filter -- remove low confidence detections (\<0.30)\
+6.  Output -- COCO formatted dataset
 
----
+This increased dataset size by **\~15× without manual labeling**.
 
-## Key Learnings
+------------------------------------------------------------------------
 
-Main takeaways from this project:
+# Inference Optimization ("Secret Sauce")
 
-- Applying deep learning to a real-world computer vision task
-- Performing exploratory data analysis for object detection datasets
-- Training and evaluating compact YOLO detectors
-- Understanding object detection metrics
-- Comparing lightweight models for practical deployment
-- Reflecting on sustainability in AI experimentation
+To achieve top leaderboard performance we applied two techniques.
 
----
+## 1. TTA --- Test Time Augmentation
 
-## References
+Inference is run on:
 
-- **Ultralytics YOLO**  
-  https://github.com/ultralytics/ultralytics
+-   original image
+-   horizontally flipped image
 
-- **PyTorch**  
-  https://pytorch.org/
+Predictions are averaged.
 
----
+Effect:
 
-## Author
+**\~1.5% improvement in mAP**
 
-TDT17 – Visual Intelligence Mini Project  
-NTNU
+## 2. WBF --- Weighted Boxes Fusion
+
+Instead of **Non-Max Suppression (NMS)**, WBF:
+
+**averages overlapping boxes**.
+
+### Ensemble Strategy
+
+Final model combines:
+
+-   YOLOv9t (shape expert)
+-   YOLO11s (generalist)
+-   RF-DETR (context expert)
+
+Result:
+
+More accurate bounding boxes and higher **mAP@50-95**.
+
+------------------------------------------------------------------------
+
+# 5. Real-World Feasibility
+
+## Deployment Strategy
+
+Although ensembles increase compute cost, modern edge AI hardware (e.g.,
+NVIDIA Orin) supports **asynchronous parallel execution**.
+
+Reference:
+
+https://developer.nvidia.com/blog/maximizing-deep-learning-performance-on-nvidia-jetson-orin-with-dla/
+
+## Latency Benchmarks (RTX 4090)
+
+  Model     Latency
+  --------- ---------
+  YOLOv9t   18.0 ms
+  YOLO11s   18.5 ms
+  RF-DETR   36.4 ms
+
+Parallel inference means system latency is determined by the **slowest
+model**, not the sum.
+
+------------------------------------------------------------------------
+
+# 5. Results
+
+  -----------------------------------------------------------------------
+  Model             mAP@50            mAP@50:95         Notes
+  ----------------- ----------------- ----------------- -----------------
+  Baseline          92.0%             65.0%             Fast but loose
+  (YOLOv11n)                                            boxes
+
+  RF-DETR (Stage 1) 89.8%             66.6%             Robust but missed
+                                                        domain specifics
+
+  RF-DETR (Stage 2) 95.0%             74.5%             Fine-tuned on
+                                                        iPhone data
+
+  Final Ensemble    **97.6%**         **79.5%**         Rank #1 / #2
+  (WBF)                                                 
+  -----------------------------------------------------------------------
+
+Key finding: **mAP@50 was easy (\~97%) but mAP@50‑95 required tighter
+bounding boxes.**
+
+------------------------------------------------------------------------
+
+# 6. Discussion
+
+### Resolution Matters
+
+Training at **640px** made distant poles invisible.
+
+Training at **1280px and above** was necessary.
+
+### Teacher Effect
+
+SAM-generated labels acted as a **teacher**, improving generalization to
+new weather conditions.
+
+### YOLO vs Transformer
+
+YOLO: - Faster - Higher recall on simple cases
+
+RF-DETR: - Slower - Higher precision in complex backgrounds
+
+Combining them solved both weaknesses.
+
+------------------------------------------------------------------------
+
+# 7. Sustainability & Compute
+
+Training was performed on:
+
+-   **IDUN Cluster (A100 GPUs)**
+-   **Cybele Lab (RTX 4090)**
+
+### Total Training Time
+
+\~25 GPU hours
+
+Breakdown:
+
+  Task               Time
+  ------------------ ------------
+  SAM3 Pipeline      \~5 hours
+  RF-DETR Training   \~12 hours
+  YOLO Experiments   \~8 hours
+
+### Energy Consumption
+
+Average GPU power:
+
+\~350 W
+
+Total energy:
+
+25h × 0.35kW ≈ **8.75 kWh**
+
+### Tesla Metric
+
+Tesla Model Y consumption:
+
+\~16 kWh / 100km
+
+Project energy (8.75 kWh) ≈ **54 km driving distance**.
+
+------------------------------------------------------------------------
+
+# 8. Key Learning Points
+
+1.  **Data Engineering \> Model Tuning**\
+    Building the SAM3 pipeline yielded larger gains than hyperparameter
+    tuning.
+
+2.  **Pseudo‑Labeling Risks**\
+    Too many epochs on pseudo-labels causes memorization of teacher
+    mistakes.
+
+3.  **Smart Ensembling**\
+    Combining **different architectures (CNN + Transformer)** works
+    better than identical models.
+
+4.  **Infrastructure Skills**\
+    Handling:
+
+-   slurm queues
+-   rsync transfers
+-   distributed training
