@@ -1,8 +1,22 @@
-# Snow Pole Detection using YOLOv9t and YOLO11s
+# Snow Pole Detection using YOLOv9t and YOLO11n
 
 TDT17 -- Visual Intelligence Mini Project
 
 ![sample](https://github.com/user-attachments/assets/7c1068e6-9964-4c9b-b1c4-31c84a8e622b)
+
+------------------------------------------------------------------------
+
+## Table of Contents
+
+- [1. Background & Motivation](#1-background--motivation)
+- [2. Approach & Strategy](#2-approach--strategy)
+- [3. Data Analysis (EDA)](#3-data-analysis-eda)
+- [4. Methods & Models](#4-methods--models)
+- [5. Real-World Feasibility](#5-real-world-feasibility)
+- [6. Results](#6-results)
+- [7. Discussion](#7-discussion)
+- [8. Sustainability & Compute](#8-sustainability--compute)
+- [9. Key Learning Points](#9-key-learning-points)
 
 ------------------------------------------------------------------------
 
@@ -32,6 +46,8 @@ appear only **1--2 pixels wide**.
 
 Develop a robust **object detection pipeline** that maximizes **mAP
 (Mean Average Precision)** while maintaining **real-time performance**.
+
+[⬆️ Back to Top](#table-of-contents)
 
 ------------------------------------------------------------------------
 
@@ -81,6 +97,8 @@ To increase robustness we combined:
 This architectural diversity improves performance across different
 scenarios.
 
+[⬆️ Back to Top](#table-of-contents)
+
 ------------------------------------------------------------------------
 
 # 3. Data Analysis (EDA)
@@ -116,11 +134,13 @@ where train and test images looked very similar.
 Low-confidence detections were removed to avoid **training on incorrect
 labels**.
 
+[⬆️ Back to Top](#table-of-contents)
+
 ------------------------------------------------------------------------
 
 # 4. Methods & Models
 
-## Architecture 1: YOLOv9t & YOLO11s
+## Architecture 1: YOLOv9t & YOLO11n
 
 ### Why YOLOv9t?
 
@@ -208,12 +228,14 @@ Instead of **Non-Max Suppression (NMS)**, WBF:
 Final model combines:
 
 -   YOLOv9t (shape expert)
--   YOLO11s (generalist)
+-   YOLO11n (generalist)
 -   RF-DETR (context expert)
 
 Result:
 
 More accurate bounding boxes and higher **mAP@50-95**.
+
+[⬆️ Back to Top](#table-of-contents)
 
 ------------------------------------------------------------------------
 
@@ -233,11 +255,13 @@ https://developer.nvidia.com/blog/maximizing-deep-learning-performance-on-nvidia
 | Model   | Latency |
 |---------|---------|
 | YOLOv9t | 18.0 ms |
-| YOLO11s | 18.5 ms |
+| YOLO11n | 18.5 ms |
 | RF-DETR | 36.4 ms |
 
 Parallel inference means system latency is determined by the **slowest
 model**, not the sum.
+
+[⬆️ Back to Top](#table-of-contents)
 
 ------------------------------------------------------------------------
 
@@ -252,8 +276,9 @@ model**, not the sum.
 | RF-DETR (Stage 2) | 95.0% | 74.5% | Fine-tuned on iPhone data |
 | Final Ensemble (WBF) | **97.6%** | **79.5%** | Rank #1 / #2 |
 
-Key finding: **mAP@50 was easy (\~97%) but mAP@50‑95 required tighter
-bounding boxes.**
+Key finding: **mAP@50 was easy (~97%) but mAP@50-95 required tighter bounding boxes.**
+
+[⬆️ Back to Top](#table-of-contents)
 
 ------------------------------------------------------------------------
 
@@ -277,6 +302,8 @@ YOLO: - Faster - Higher recall on simple cases
 RF-DETR: - Slower - Higher precision in complex backgrounds
 
 Combining them solved both weaknesses.
+
+[⬆️ Back to Top](#table-of-contents)
 
 ------------------------------------------------------------------------
 
@@ -317,6 +344,8 @@ Tesla Model Y consumption:
 
 Project energy (8.75 kWh) ≈ **54 km driving distance**.
 
+[⬆️ Back to Top](#table-of-contents)
+
 ------------------------------------------------------------------------
 
 # 9. Key Learning Points
@@ -339,3 +368,5 @@ Project energy (8.75 kWh) ≈ **54 km driving distance**.
 -   slurm queues
 -   rsync transfers
 -   distributed training
+
+[⬆️ Back to Top](#table-of-contents)
