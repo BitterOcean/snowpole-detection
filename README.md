@@ -34,6 +34,20 @@ Snow poles are physical markers that define road boundaries when lane markings a
 ## Repository Structure
 
 ```
+.
+├── notebooks/
+│   ├── eda/
+│   │   ├── eda.ipynb
+│   │   ├── eda-roadpolesiphone.ipynb
+│   │   ├── eda-msj.ipynb
+│   │   └── vizcoco.ipynb
+│   ├── training/
+│   │   └── rfdetr.ipynb
+│   └── validation/
+│       ├── val-iphone.ipynb
+│       ├── val-msj.ipynb
+│       └── val-v1.ipynb
+│
 ├── pipeline/
 │   └── sam_autolabel_pipeline.py   # SAM 3 auto-labeling from YouTube + local data
 │
@@ -57,6 +71,7 @@ Snow poles are physical markers that define road boundaries when lane markings a
 │   ├── convert_easy.py             # Quick format conversion helper
 │   └── check_gpu_ready.py          # Verify GPU setup before training
 │
+├── data.yaml
 ├── requirements.txt
 └── .gitignore
 ```

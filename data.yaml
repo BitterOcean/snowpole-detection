@@ -1,0 +1,16 @@
+path: /datasets/tdt4265/Poles2025
+train:
+  - roadpoles_v1/train/images
+  - Road_poles_iPhone/images/Train/train
+ # - RoadPoles-MSJ_pseudo/images/train   # if you put images/train here
+
+val:
+  - roadpoles_v1/valid/images
+  - Road_poles_iPhone/images/Validation/val
+
+test:
+  - roadpoles_v1/test/images
+  - Road_poles_iPhone/images/Test/test
+
+names:
+  0: snowpole
